@@ -121,7 +121,7 @@ def get_doctors():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-        @app.route('/appointments/book', methods=['POST'])
+@app.route('/appointments/book', methods=['POST'])
 def book_appointment():
     data = request.json
     patient_id = data.get('patient_id')
