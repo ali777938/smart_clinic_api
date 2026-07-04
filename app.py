@@ -9,11 +9,8 @@ app = Flask(__name__)
 CORS(app)
 
 def get_db_connection():
-    # تنظيف عنوان السيرفر تلقائياً من أي رموز خفية ناتجة عن النسخ
-    clean_host = "://clever-cloud.com".strip()
-    
     return mysql.connector.connect(
-        host=clean_host,
+        host="81.200.245.54",
         user="uh6yw9wq8p3npzwq",
         password="PcoFoUA0rlIsB5Hb4VST",
         database="bhmbj1m8nkpfvmeanijf",
