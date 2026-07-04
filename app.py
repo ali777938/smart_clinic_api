@@ -10,7 +10,7 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 
 def get_db_connection():
     return mysql.connector.connect(
-        host="81.200.245.54",
+        host="://clever-cloud.com",
         user="uh6yw9wq8p3npzwq",
         password="PcoFoUA0rlIsB5Hb4VST",
         database="bhmbj1m8nkpfvmeanijf",
