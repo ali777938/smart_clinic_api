@@ -3,13 +3,14 @@ from flask_cors import CORS
 import mysql.connector
 import hashlib
 from datetime import datetime
+from decimal import Decimal
 
 app = Flask(__name__)
 CORS(app)
 
 def get_db_connection():
     return mysql.connector.connect(
-        host="bhmbj1m8nkpfvmeanijf-mysql.services.clever-cloud.com",
+        host="://clever-cloud.com",
         user="uh6yw9wq8p3npzwq",
         password="PcoFoUA0rlIsB5Hb4VST",
         database="bhmbj1m8nkpfvmeanijf",
@@ -30,6 +31,8 @@ def register():
     mail = data.get('mail')
     password = data.get('password')
     role = data.get('role')
+    specialty_id = data.get('specialty_id')
+    consultation_fee = data.get('consultation_fee')
 
     if not all([full_name, mail, password, role]):
         return jsonify({"status": "error", "message": "All fields are required"}), 400
@@ -54,6 +57,16 @@ def register():
             (full_name, mail, hashed_pwd, role)
         )
         conn.commit()
+        
+        if role == 'doctor':
+            last_user_id = cursor.lastrowid
+            if specialty_id and consultation_fee:
+                cursor.execute(
+                    "INSERT INTO doctors (user_id, specialty_id, consultation_fee) VALUES (%s, %s, %s)",
+                    (last_user_id, specialty_id, consultation_fee)
+                )
+                conn.commit()
+        
         cursor.close()
         conn.close()
         return jsonify({"status": "success", "message": "User registered successfully"}), 201
@@ -83,7 +96,13 @@ def login():
         conn.close()
 
         if user:
-            return jsonify({"status": "success", "user": user}), 200
+            return jsonify({
+                "status": "success", 
+                "role": user['role'],
+                "user_id": user['id'],
+                "full_name": user['full_name'],
+                "mail": user['mail']
+            }), 200
         else:
             return jsonify({"status": "error", "message": "Invalid email or password"}), 401
     except Exception as e:
@@ -117,7 +136,14 @@ def get_doctors():
         res = cursor.fetchall()
         cursor.close()
         conn.close()
-        return jsonify({"status": "success", "doctors": res})
+        
+        processed_doctors = []
+        for doc in res:
+            if isinstance(doc['consultation_fee'], Decimal):
+                doc['consultation_fee'] = float(doc['consultation_fee'])
+            processed_doctors.append(doc)
+            
+        return jsonify({"status": "success", "doctors": processed_doctors})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -162,6 +188,11 @@ def get_patient_appointments(patient_id):
         res = cursor.fetchall()
         cursor.close()
         conn.close()
+        
+        for appt in res:
+            if isinstance(appt['appointment_date'], datetime):
+                appt['appointment_date'] = appt['appointment_date'].strftime('%Y-%m-%d %H:%M:%S')
+                
         return jsonify({"status": "success", "appointments": res})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -175,6 +206,8 @@ def get_doctor_appointments(user_id):
         cursor.execute("SELECT id FROM doctors WHERE user_id = %s", (user_id,))
         doctor = cursor.fetchone()
         if not doctor:
+            cursor.close()
+            conn.close()
             return jsonify({"status": "error", "message": "Doctor record not found"}), 404
             
         doctor_id = doctor['id']
@@ -191,6 +224,11 @@ def get_doctor_appointments(user_id):
         res = cursor.fetchall()
         cursor.close()
         conn.close()
+        
+        for appt in res:
+            if isinstance(appt['appointment_date'], datetime):
+                appt['appointment_date'] = appt['appointment_date'].strftime('%Y-%m-%d %H:%M:%S')
+                
         return jsonify({"status": "success", "appointments": res})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -225,5 +263,6 @@ def update_appointment(appointment_id):
         return jsonify({"status": "success", "message": "Appointment updated successfully"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
