@@ -224,9 +224,13 @@ def get_doctor_appointments(user_id):
         cursor.close()
         conn.close()
         
-        for appt in res:
-            if isinstance(appt['appointment_date'], datetime):
-                appt['appointment_date'] = appt['appointment_date'].strftime('%Y-%m-%d %H:%M:%S')
+         for appt in res:
+            if 'appointment_date' in appt and appt['appointment_date'] is not None:
+                if isinstance(appt['appointment_date'], datetime):
+                    appt['appointment_date'] = appt['appointment_date'].strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    # إذا كان نوعه text أو أي شيء آخر، نحوله لنص عادي بشكل آمن
+                    appt['appointment_date'] = str(appt['appointment_date'])
                 
         return jsonify({"status": "success", "appointments": res}), 200
     except Exception as e:
