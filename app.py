@@ -219,7 +219,7 @@ def get_doctor_appointments(user_id):
             WHERE a.doctor_id = %s
             ORDER BY a.appointment_date DESC
         """
-        cursor.execute(query, (doctor_id, today))
+        cursor.execute(query, (doctor_id,))
         res = cursor.fetchall()
         cursor.close()
         conn.close()
