@@ -224,7 +224,7 @@ def get_doctor_appointments(user_id):
         cursor.close()
         conn.close()
         
-         for appt in res:
+        for appt in res:
             if 'appointment_date' in appt and appt['appointment_date'] is not None:
                 if isinstance(appt['appointment_date'], datetime):
                     appt['appointment_date'] = appt['appointment_date'].strftime('%Y-%m-%d %H:%M:%S')
