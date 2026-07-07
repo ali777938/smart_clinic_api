@@ -197,7 +197,7 @@ def get_patient_appointments(patient_id):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@app.route('/doctor/appointments/<int:user_id>', methods=['GET'])
+@app.route('/appointments/doctor/<int:user_id>', methods=['GET'])
 def get_doctor_appointments(user_id):
     try:
         conn = get_db_connection()
@@ -229,11 +229,11 @@ def get_doctor_appointments(user_id):
             if isinstance(appt['appointment_date'], datetime):
                 appt['appointment_date'] = appt['appointment_date'].strftime('%Y-%m-%d %H:%M:%S')
                 
-        return jsonify({"status": "success", "appointments": res})
+        return jsonify({"status": "success", "appointments": res}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@app.route('/appointments/update/<int:appointment_id>', methods=['PUT'])
+@app.route('/appointments/update/<int:appointment_id>', methods=['POST'])
 def update_appointment(appointment_id):
     data = request.json
     status = data.get('status')
