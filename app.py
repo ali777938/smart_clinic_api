@@ -211,14 +211,13 @@ def get_doctor_appointments(user_id):
             return jsonify({"status": "error", "message": "Doctor record not found"}), 404
             
         doctor_id = doctor['id']
-        today = datetime.now().strftime('%Y-%m-%d')
         
         query = """
             SELECT a.id, u.full_name AS patient_name, a.appointment_date, a.status, a.doctor_notes
             FROM appointments a
             JOIN users u ON a.patient_id = u.id
-            WHERE a.doctor_id = %s AND DATE(a.appointment_date) = %s
-            ORDER BY a.appointment_date ASC
+            WHERE a.doctor_id = %s
+            ORDER BY a.appointment_date DESC
         """
         cursor.execute(query, (doctor_id, today))
         res = cursor.fetchall()
