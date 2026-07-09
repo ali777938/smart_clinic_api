@@ -87,10 +87,20 @@ def login():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute(
-            "SELECT id, full_name, mail, role FROM users WHERE mail = %s AND password = %s",
-            (mail, hashed_pwd)
-        )
+        
+        # استعلام مدمج يجلب بيانات المستخدم، ومعرف الطبيب إن وجد
+        query = """
+            SELECT 
+                users.id AS user_id, 
+                users.full_name, 
+                users.mail, 
+                users.role, 
+                doctors.id AS doctor_id
+            FROM users
+            LEFT JOIN doctors ON users.id = doctors.user_id
+            WHERE users.mail = %s AND users.password = %s
+        """
+        cursor.execute(query, (mail, hashed_pwd))
         user = cursor.fetchone()
         cursor.close()
         conn.close()
@@ -99,9 +109,10 @@ def login():
             return jsonify({
                 "status": "success", 
                 "role": user['role'],
-                "user_id": user['id'],
+                "user_id": user['user_id'],
                 "full_name": user['full_name'],
-                "mail": user['mail']
+                "mail": user['mail'],
+                "doctor_id": user['doctor_id'] # سيرسل رقم الطبيب (2) أو سيرسل null للمريض
             }), 200
         else:
             return jsonify({"status": "error", "message": "Invalid email or password"}), 401
