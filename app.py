@@ -243,6 +243,8 @@ def get_doctor_appointments(doctor_id):
                 else:
                     # إذا كان نوعه text أو أي شيء آخر، نحوله لنص عادي بشكل آمن
                     appt['appointment_date'] = str(appt['appointment_date'])
+              if 'doctor_notes' in appt and appt['doctor_notes'] is None:
+                appt['doctor_notes'] = None 
                 
         return jsonify(res), 200
     except Exception as e:
