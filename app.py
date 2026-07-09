@@ -216,10 +216,11 @@ def get_doctor_appointments(id_param):
         
         cursor.execute("SELECT id FROM doctors WHERE user_id = %s OR id = %s", (id_param, id_param))
         doctor = cursor.fetchone()
+
         if not doctor:
             cursor.close()
             conn.close()
-            return jsonify({"status": "error", "message": "Doctor record not found"}), 404
+            return jsonify([]), 200
             
         doctor_id = doctor['id']
         
