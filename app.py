@@ -87,20 +87,10 @@ def login():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        
-        # استعلام مدمج يجلب بيانات المستخدم، ومعرف الطبيب إن وجد
-        query = """
-            SELECT 
-                users.id AS user_id, 
-                users.full_name, 
-                users.mail, 
-                users.role, 
-                doctors.id AS doctor_id
-            FROM users
-            LEFT JOIN doctors ON users.id = doctors.user_id
-            WHERE users.mail = %s AND users.password = %s
-        """
-        cursor.execute(query, (mail, hashed_pwd))
+        cursor.execute(
+            "SELECT id, full_name, mail, role FROM users WHERE mail = %s AND password = %s",
+            (mail, hashed_pwd)
+        )
         user = cursor.fetchone()
         cursor.close()
         conn.close()
@@ -109,10 +99,9 @@ def login():
             return jsonify({
                 "status": "success", 
                 "role": user['role'],
-                "user_id": user['user_id'],
+                "user_id": user['id'],
                 "full_name": user['full_name'],
-                "mail": user['mail'],
-                "doctor_id": user['doctor_id'] # سيرسل رقم الطبيب (2) أو سيرسل null للمريض
+                "mail": user['mail']
             }), 200
         else:
             return jsonify({"status": "error", "message": "Invalid email or password"}), 401
@@ -216,11 +205,10 @@ def get_doctor_appointments(doctor_id):
         
         cursor.execute("SELECT id FROM doctors WHERE user_id = %s OR id = %s", (doctor_id, doctor_id))
         doctor = cursor.fetchone()
-
         if not doctor:
             cursor.close()
             conn.close()
-            return jsonify([]), 200
+            return jsonify({"status": "success", "appointments": []}), 200
             
         target_doctor_id = doctor['id']
         
@@ -237,19 +225,13 @@ def get_doctor_appointments(doctor_id):
         conn.close()
         
         for appt in res:
-            if 'appointment_date' in appt and appt['appointment_date'] is not None:
-                if isinstance(appt['appointment_date'], datetime):
-                    appt['appointment_date'] = appt['appointment_date'].strftime('%Y-%m-%d %H:%M:%S')
-                else:
-                    # إذا كان نوعه text أو أي شيء آخر، نحوله لنص عادي بشكل آمن
-                    appt['appointment_date'] = str(appt['appointment_date'])
-            if 'doctor_notes' in appt and appt['doctor_notes'] is None:
-                appt['doctor_notes'] = None 
+            if isinstance(appt['appointment_date'], datetime):
+                appt['appointment_date'] = appt['appointment_date'].strftime('%Y-%m-%d %H:%M:%S')
                 
-        return jsonify(res), 200
+        return jsonify({"status": "success", "appointments": res}), 200
+        
     except Exception as e:
-        # إعادة مصفوفة فارغة في حال حدوث خطأ حتى لا ينهار التطبيق
-        return jsonify([]), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/appointments/update/<int:appointment_id>', methods=['POST'])
 def update_appointment(appointment_id):
