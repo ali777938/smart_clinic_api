@@ -208,13 +208,13 @@ def get_patient_appointments(patient_id):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@app.route('/appointments/doctor/<int:id_param>', methods=['GET'])
-def get_doctor_appointments(id_param):
+@app.route('/appointments/doctor/<int:doctor_id>', methods=['GET'])
+def get_doctor_appointments(doctor_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        cursor.execute("SELECT id FROM doctors WHERE user_id = %s OR id = %s", (id_param, id_param))
+        cursor.execute("SELECT id FROM doctors WHERE user_id = %s OR id = %s", (doctor_id, doctor_id))
         doctor = cursor.fetchone()
 
         if not doctor:
@@ -222,7 +222,7 @@ def get_doctor_appointments(id_param):
             conn.close()
             return jsonify([]), 200
             
-        doctor_id = doctor['id']
+        target_doctor_id = doctor['id']
         
         query = """
             SELECT a.id, u.full_name AS patient_name, a.appointment_date, a.status, a.doctor_notes
@@ -231,7 +231,7 @@ def get_doctor_appointments(id_param):
             WHERE a.doctor_id = %s
             ORDER BY a.appointment_date DESC
         """
-        cursor.execute(query, (doctor_id,))
+        cursor.execute(query, (target_doctor_id,))
         res = cursor.fetchall()
         cursor.close()
         conn.close()
@@ -244,7 +244,7 @@ def get_doctor_appointments(id_param):
                     # إذا كان نوعه text أو أي شيء آخر، نحوله لنص عادي بشكل آمن
                     appt['appointment_date'] = str(appt['appointment_date'])
                 
-        return jsonify([{"id": 1, "patient_name": "مريض تجريبي", "appointment_date": "2026-07-09 14:00:00", "status": "pending", "doctor_notes": None}]), 200
+        return jsonify(res), 200
     except Exception as e:
         # إعادة مصفوفة فارغة في حال حدوث خطأ حتى لا ينهار التطبيق
         return jsonify([]), 500
