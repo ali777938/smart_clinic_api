@@ -215,14 +215,6 @@ def get_doctor_appointments(doctor_id):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        cursor.execute("SELECT id FROM doctors WHERE user_id = %s", (doctor_id,))
-        doctor = cursor.fetchone()
-        
-        if doctor:
-            target_doctor_id = doctor['id']
-        else:
-            target_doctor_id = doctor_id
-        
         query = """
             SELECT a.id, u.full_name AS patient_name, a.appointment_date, a.status, a.doctor_notes
             FROM appointments a
@@ -230,7 +222,7 @@ def get_doctor_appointments(doctor_id):
             WHERE a.doctor_id = %s
             ORDER BY a.appointment_date DESC
         """
-        cursor.execute(query, (target_doctor_id,))
+        cursor.execute(query, (doctor_id,))
         res = cursor.fetchall()
         cursor.close()
         conn.close()
@@ -239,8 +231,7 @@ def get_doctor_appointments(doctor_id):
             if isinstance(appt['appointment_date'], datetime):
                 appt['appointment_date'] = appt['appointment_date'].strftime('%Y-%m-%d %H:%M:%S')
                 
-        return jsonify({"status": "success", "appointments": res}), 200
-        
+        return jsonify({"status": "success", "appointments": res})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
