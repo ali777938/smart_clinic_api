@@ -92,18 +92,30 @@ def login():
             (mail, hashed_pwd)
         )
         user = cursor.fetchone()
-        cursor.close()
-        conn.close()
 
         if user:
+            final_user_id = user['id']
+            
+            # إذا كان المستخدم طبيباً، نجلب الـ id الخاص به من جدول الأطباء لتفادي مشكلة الشاشة الفارغة
+            if user['role'] == 'doctor':
+                cursor.execute("SELECT id FROM doctors WHERE user_id = %s", (user['id'],))
+                doctor_data = cursor.fetchone()
+                if doctor_data:
+                    final_user_id = doctor_data['id']
+
+            cursor.close()
+            conn.close()
+
             return jsonify({
                 "status": "success", 
                 "role": user['role'],
-                "user_id": user['id'],
+                "user_id": final_user_id,
                 "full_name": user['full_name'],
                 "mail": user['mail']
             }), 200
         else:
+            cursor.close()
+            conn.close()
             return jsonify({"status": "error", "message": "Invalid email or password"}), 401
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
