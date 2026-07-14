@@ -203,14 +203,13 @@ def get_doctor_appointments(doctor_id):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        cursor.execute("SELECT id FROM doctors WHERE user_id = %s OR id = %s", (doctor_id, doctor_id))
+        cursor.execute("SELECT id FROM doctors WHERE user_id = %s", (doctor_id,))
         doctor = cursor.fetchone()
-        if not doctor:
-            cursor.close()
-            conn.close()
-            return jsonify({"status": "success", "appointments": []}), 200
-            
-        target_doctor_id = doctor['id']
+        
+        if doctor:
+            target_doctor_id = doctor['id']
+        else:
+            target_doctor_id = doctor_id
         
         query = """
             SELECT a.id, u.full_name AS patient_name, a.appointment_date, a.status, a.doctor_notes
